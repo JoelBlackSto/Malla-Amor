@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Malla Amorcito</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f087b6;
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .tablero {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+    }
+
+    .bloque-anio {
+      min-width: 240px;
+      background: #f09ce6;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 10px;
+      flex-shrink: 0;
+    }
+
+    .bloque-anio h2 {
+      text-align: center;
+      background: #ee31e8;
+      color: white;
+      padding: 8px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+    }
+
+    .semestre {
+      margin-bottom: 20px;
+    }
+
+    .semestre h3 {
+      font-size: 14px;
+      margin-bottom: 6px;
+      background: #eee;
+      padding: 4px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .ramo {
+      padding: 8px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .ramo.cursado {
+      background: white;
+      text-decoration: line-through;
+      border-color: #e91e63;
+      color: #e91e63;
+    }
+
+    .ramo.bloqueado {
+      background: #ddd;
+      color: #888;
+      border-color: #aaa;
+      cursor: not-allowed;
+    }
+
+    #nuevoOptativo {
+      padding: 6px;
+      margin-right: 10px;
+      width: 250px;
+    }
+
+    button {
+      padding: 6px 12px;
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .eliminar {
+      background: #e53935;
+      color: white;
+      border: none;
+      margin-left: 10px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .encabezado {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.titulo {
+  background-color: #f09ce6;
+  border-radius: 30%;
+  padding: 15px;
+  text-align: center;
+  font-family: cursive;
+  font-size: 35px;
+  white-space: nowrap;
+}
+
+.form-optativo {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="encabezado">
+  <div class="titulo"> 🧑🏻‍🎓🐧Malla Curricular - Antonia Makarenna Moreno Cortes 🧾💸</div>
+  <div class="form-optativo">
+    <input type="text" id="nuevoOptativo" placeholder="Ej: NOMBRE DEL OPTATIVO">
+    <button onclick="agregarOptativo()">Agregar Optativo</button>
+  </div>
+</div>
+
+
+
+  <div class="tablero" id="mallaContainer"></div>
+
+
+  <script>
+    const ramosPorAnio = {
+      "1° Año": {
+        "1er Semestre": ["FUND DE ADMINISTRACION",
+        "FUND DE CONTABILIDAD IFRS","FUND DE DERECHO EMPRESARIAL","INTRODUCCION A LA ECONOMIA","EXPR ORAL Y ESCRITA","FUND DE MATEMATICAS"],
+        "2do Semestre": ["PROC CONTABLES IFRS","DER COMERCIAL Y LABORAL","MICROECONOMIA","MATEMATICAS FINANCIERAS","INLGES TECNICO","ALGEBRA"]
+      },
+      "2° Año": {
+        "3er Semestre": ["CONT INTERMEDIA IFRS","DERECHO TRIBUTARIO I","MACROECONOMIA","COSTOS Y PRESUPUESTO","CALCULO"],
+        "4to Semestre": ["GESTION DE RR.HH","DERECHO TRIBUTARIO II","FINANZAS","SISTEMAS DE INFORMACION","ESTADISTICA"]
+      },
+      "3° Año": {
+        "5to Semestre": ["PLANIF Y DIREC ESTRATEGICA","FUNDAMENTOS DE AUDITORIA","PLANIFICACION TRIBUTARIA","FINANZAS II","FORM COMPLEMENTARIA","ANALI Y DISEÑO DE PROC DE NEGOCIOS"],
+        "6to Semestre": ["CONTROL DE GESTION","AUD DE ESTADOS FINANCIEROS I","AUD TRIBUTARIA","FORM Y EVALUACION DE PROYECTOS","FORMACION COMPLEMENTARIA","SIS GESTORES DE BDD", "PRACTICA PROFESIONAL I"]
+      },
+      "4° Año": {
+        "7mo Semestre": ["AUDITORIA DE GESTION","AUD DE ESTADOS FINANCIEROS II","FINANZAS CORPORATIVAS","FORMACION COMPLEMENTARIA","TEC PARA EL ANALISIS DE FRAUDE","ETICA EMPRESARIAL Y ECONOMICA"],
+        "8vo Semestre": ["GOBIERNO CORPORATIVO","AUDITORIA FORENSE","SEMINARIO TITULO","FORMACION COMPLEMENTARIA","AUD DE PROCESOS TECNOLOGICOS","INNOVACION Y EMPRENDIMIENTO","PRACTICA PROFESIONAL II"]
+      }
+    };
+
+    const prerequisitos = {
+      "PROC CONTABLES IFRS":["FUND DE CONTABILIDAD IFRS"],
+      "MICROECONOMIA":["INTRODUCCION A LA ECONOMIA"],
+      "CONT INTERMEDIA IFRS":["FUND DE CONTABILIDAD IFRS"],
+      "CALCULO":["FUND DE MATEMATICAS"],
+      "DERECHO TRIBUTARIO II":["FUND DE DERECHO EMPRESARIAL"],
+      "FINANZAS":["MATEMATICAS FINANCIERAS"],
+      "ESTADISTICAS":["ALGEBRA"],
+      "PLANIF Y DIREC ESTRATEGICA":["COSTOS Y PRESUPUESTO"],
+      "FUND DE AUDITORIA":["CONT INTERMEDIA IFRS"],
+      "PLANIFICACION TRIBUTARIA":["DERECHO TRIBUTARIO I"],
+      "FINANZAS II":["FINANZAS I"],
+      "ANALI Y DISEÑO DE PROC DE NEGOCIOS": ["SISTEMAS DE INFORMACION"],
+      "CONTROL DE GESTION":["COSTOS Y PRESUPUESTO"],
+      "AUD DE ESTADOS FINANCIEROS I":["FUNDAMENTOS DE AUDITORIA"],
+      "AUD TRIBUTARIA":["DERECHO TRIBUTARIO II"],
+      "FORM Y EVALUACION DE PROYECTOS":["FINANZAS I"],
+      "SIS GESTORES DE BDD":["SISTEMAS DE INFORMACION"],
+      "AUDITORIA DE GESTION":["CONTROL DE GESTION"],
+      "AUD DE ESTADOS FINANCIEROS II":["AUD DE ESTADOS FINANCIEROS I"],
+      "TEC PARA EL ANILISIS DE FRAUDE":["SIS GESTORES DE BDD"],
+      "GOBIERNO CORPORATIVO":["PLANIF Y DIREC ESTRATEGICA"],
+      "AUDITORIA FORENSE":["AUD DE ESTADOS FINANCIEROS I"],
+      "SEMINARIO DE TITULO":["AUD DE ESTADOS FINANCIEROS II"],
+      "AUD DE PROCESOS TECNOLOGICOS":["FUNDAMENTOS DE AUDITORIA"],
+      "INNOVACION Y EMPRENDIMIENTO":["ANALI Y DISEÑO DED PROC DE NEGOCIOS"],
+      "PRACTICA PROFESIONAL I":["CONT INTERMEDIA IFRS"],
+      "PRACTICA PROFESIONAL II":["AUD DE ESTADOS FINANCIEROS II"]
+
+    };
+
+    const estado = JSON.parse(localStorage.getItem("estadoRamos") || "{}");
+
+    function actualizarEstados() {
+      document.querySelectorAll(".ramo").forEach(ramo => {
+        const nombre = ramo.dataset.id;
+        const requisitos = prerequisitos[nombre] || [];
+        const cumplido = requisitos.every(r => estado[r]);
+        ramo.classList.remove("cursado", "bloqueado");
+        if (!cumplido && requisitos.length > 0) {
+          ramo.classList.add("bloqueado");
+        } else if (estado[nombre]) {
+          ramo.classList.add("cursado");
+        }
+      });
+    }
+
+    function cambiarEstado(nombre) {
+      if (!estado[nombre]) {
+        estado[nombre] = true;
+      } else {
+        delete estado[nombre];
+      }
+      localStorage.setItem("estadoRamos", JSON.stringify(estado));
+      actualizarEstados();
+    }
+
+    function crearRamo(nombre, contenedor, optativo = false) {
+      const div = document.createElement("div");
+      div.className = "ramo";
+      div.dataset.id = nombre;
+      div.innerHTML = optativo
+        ? `<span>${nombre}</span><button class="eliminar" onclick="eliminarOptativo('${nombre}', this)">X</button>`
+        : nombre;
+      div.addEventListener("click", (e) => {
+        if (e.target.tagName === "BUTTON") return;
+        if (div.classList.contains("bloqueado")) return;
+        cambiarEstado(nombre);
+      });
+      contenedor.appendChild(div);
+    }
+
+    function crearAnioBloque(nombreAnio, dataAnio) {
+      const bloque = document.createElement("div");
+      bloque.className = "bloque-anio";
+
+      const titulo = document.createElement("h2");
+      titulo.textContent = nombreAnio;
+      bloque.appendChild(titulo);
+
+      for (const [semestre, ramos] of Object.entries(dataAnio)) {
+        const divSemestre = document.createElement("div");
+        divSemestre.className = "semestre";
+
+        const tituloSem = document.createElement("h3");
+        tituloSem.textContent = semestre;
+        divSemestre.appendChild(tituloSem);
+
+        ramos.forEach(nombre => crearRamo(nombre, divSemestre));
+        bloque.appendChild(divSemestre);
+      }
+
+      return bloque;
+    }
+
+    function agregarOptativo() {
+      const input = document.getElementById("nuevoOptativo");
+      const nombre = input.value.trim();
+      if (!nombre) return;
+
+      const optBloque = document.getElementById("optativosBloque");
+      crearRamo(nombre, optBloque, true);
+
+      const guardados = JSON.parse(localStorage.getItem("optativos") || "[]");
+      guardados.push(nombre);
+      localStorage.setItem("optativos", JSON.stringify(guardados));
+      input.value = "";
+    }
+
+    function eliminarOptativo(nombre, btn) {
+      const div = btn.parentElement;
+      div.remove();
+      delete estado[nombre];
+      const guardados = JSON.parse(localStorage.getItem("optativos") || "[]");
+      const actualizados = guardados.filter(o => o !== nombre);
+      localStorage.setItem("optativos", JSON.stringify(actualizados));
+      localStorage.setItem("estadoRamos", JSON.stringify(estado));
+      actualizarEstados();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const container = document.getElementById("mallaContainer");
+
+      for (const [anio, dataAnio] of Object.entries(ramosPorAnio)) {
+        const bloque = crearAnioBloque(anio, dataAnio);
+        container.appendChild(bloque);
+      }
+
+      const bloqueOpt = document.createElement("div");
+      bloqueOpt.className = "bloque-anio";
+      const tituloOpt = document.createElement("h2");
+      tituloOpt.textContent = "Optativos";
+      bloqueOpt.appendChild(tituloOpt);
+
+      const contenedorOpt = document.createElement("div");
+      contenedorOpt.id = "optativosBloque";
+      bloqueOpt.appendChild(contenedorOpt);
+      container.appendChild(bloqueOpt);
+
+      const optativosGuardados = JSON.parse(localStorage.getItem("optativos") || "[]");
+      optativosGuardados.forEach(nombre => {
+        crearRamo(nombre, contenedorOpt, true);
+      });
+
+      actualizarEstados();
+    });
+  </script>
+</body>
+</html>
